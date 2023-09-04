@@ -31,9 +31,9 @@
 define ('PLUGIN_GENERICOBJECT_VERSION', '2.11.1');
 
 // Minimal GLPI version, inclusive
-define("PLUGIN_GENERICOBJECT_MIN_GLPI", "9.5");
+define("PLUGIN_GENERICOBJECT_MIN_ITSMNG", "9.5");
 // Maximum GLPI version, exclusive
-define("PLUGIN_GENERICOBJECT_MAX_GLPI", "9.6");
+define("PLUGIN_GENERICOBJECT_MAX_ITSMNG", "9.6");
 
 if (!defined("GENERICOBJECT_DIR")) {
    define("GENERICOBJECT_DIR", Plugin::getPhpDir("genericobject"));
@@ -219,13 +219,13 @@ function plugin_version_genericobject() {
    return [
       'name'           => __("Objects management", "genericobject"),
       'version'        => PLUGIN_GENERICOBJECT_VERSION,
-      'author'         => "<a href=\"mailto:contact@teclib.com\">Teclib'</a> & siprossii",
-      'homepage'       => 'https://github.com/pluginsGLPI/genericobject',
+      'author'         => "Teclib & siprossii",
+      'homepage'       => 'https://github.com/itsmng/genericobject',
       'license'        => 'GPLv2+',
       'requirements'   => [
          'glpi' => [
-            'min' => PLUGIN_GENERICOBJECT_MIN_GLPI,
-            'max' => PLUGIN_GENERICOBJECT_MAX_GLPI,
+            'min' => PLUGIN_GENERICOBJECT_MIN_ITSMNG,
+            'max' => PLUGIN_GENERICOBJECT_MAX_ITSMNG,
             'dev' => true, //Required to allow 9.2-dev
           ]
        ]
