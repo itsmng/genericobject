@@ -1,9 +1,8 @@
 # Genericobject ITSMNG plugin
 
-[![License](https://img.shields.io/github/license/itsmng/genericobject.svg?&label=License)](https://github.com/itsmng/genericobject/blob/develop/LICENSE)
+[![License](https://img.shields.io/github/license/itsmng/genericobject.svg?&label=License)](https://github.com/itsmng/genericobject/blob/main/LICENSE)
 [![Project Status: Active](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
 [![GitHub release](https://img.shields.io/github/release/itsmng/genericobject.svg)](https://github.com/itsmng/genericobject/releases)
-[![GitHub build](https://travis-ci.org/itsmng/genericobject.svg?)](https://travis-ci.org/itsmng/genericobject/)
 
 ![Screenshot](./genericobject.gif "genericobject")
 
