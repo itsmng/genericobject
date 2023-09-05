@@ -1,4 +1,4 @@
-# Genericobject GLPI plugin
+# Genericobject ITSMNG plugin
 
 [![License](https://img.shields.io/github/license/itsmng/genericobject.svg?&label=License)](https://github.com/itsmng/genericobject/blob/develop/LICENSE)
 [![Project Status: Active](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
