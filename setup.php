@@ -28,7 +28,7 @@
  * -------------------------------------------------------------------------
  */
 
-define ('PLUGIN_GENERICOBJECT_VERSION', '2.11.1');
+define('PLUGIN_GENERICOBJECT_VERSION', '2.12.0');
 
 // Minimal GLPI version, inclusive
 define("PLUGIN_GENERICOBJECT_MIN_ITSMNG", "9.5");
@@ -46,7 +46,7 @@ if (!defined("GENERICOBJECT_DOC_DIR")) {
    }
 }
 if (!defined("GENERICOBJECT_FRONT_PATH")) {
-   define("GENERICOBJECT_FRONT_PATH", GENERICOBJECT_DOC_DIR."/front");
+   define("GENERICOBJECT_FRONT_PATH", GENERICOBJECT_DOC_DIR . "/front");
    if (!file_exists(GENERICOBJECT_FRONT_PATH)) {
       mkdir(GENERICOBJECT_FRONT_PATH);
    }
@@ -87,8 +87,8 @@ if (!defined("GENERICOBJECT_PICS_PATH")) {
 }
 
 // Autoload class generated in files/_plugins/genericobject/inc/
-include_once( GENERICOBJECT_DIR . "/inc/autoload.php");
-include_once( GENERICOBJECT_DIR . "/inc/functions.php");
+include_once(GENERICOBJECT_DIR . "/inc/autoload.php");
+include_once(GENERICOBJECT_DIR . "/inc/functions.php");
 if (file_exists(GENERICOBJECT_DIR . "/log_filter.settings.php")) {
    include_once(GENERICOBJECT_DIR . "/log_filter.settings.php");
 }
@@ -104,32 +104,56 @@ $go_autoloader->register();
  *
  * @return void
  */
-function plugin_init_genericobject() {
+function plugin_init_genericobject()
+{
    global $PLUGIN_HOOKS, $GO_BLACKLIST_FIELDS,
-          $GENERICOBJECT_PDF_TYPES, $GO_LINKED_TYPES, $GO_READONLY_FIELDS;
+   $GENERICOBJECT_PDF_TYPES, $GO_LINKED_TYPES, $GO_READONLY_FIELDS;
 
-   $GO_READONLY_FIELDS  =  ["is_helpdesk_visible", "comment"];
+   $GO_READONLY_FIELDS = ["is_helpdesk_visible", "comment"];
 
-   $GO_BLACKLIST_FIELDS =  ["itemtype", "table", "is_deleted", "id", "entities_id",
-                            "is_recursive", "is_template", "notepad", "template_name",
-                            "date_mod", "name", "is_helpdesk_visible", "comment",
-                            "date_creation"];
+   $GO_BLACKLIST_FIELDS = [
+      "itemtype",
+      "table",
+      "is_deleted",
+      "id",
+      "entities_id",
+      "is_recursive",
+      "is_template",
+      "notepad",
+      "template_name",
+      "date_mod",
+      "name",
+      "is_helpdesk_visible",
+      "comment",
+      "date_creation"
+   ];
 
-   $GO_LINKED_TYPES     =  ['Computer', 'Phone', 'Peripheral', 'Software', 'Monitor',
-                            'Printer', 'NetworkEquipment'];
+   $GO_LINKED_TYPES = [
+      'Computer',
+      'Phone',
+      'Peripheral',
+      'Software',
+      'Monitor',
+      'Printer',
+      'NetworkEquipment'
+   ];
 
    $PLUGIN_HOOKS['csrf_compliant']['genericobject'] = true;
-   $GENERICOBJECT_PDF_TYPES                         =  [];
-   $plugin                                          = new Plugin();
+   $GENERICOBJECT_PDF_TYPES = [];
+   $plugin = new Plugin();
 
-   if ($plugin->isInstalled("genericobject")
+   if (
+      $plugin->isInstalled("genericobject")
       && $plugin->isActivated("genericobject")
-         && isset($_SESSION['glpiactiveprofile'])) {
+      && isset($_SESSION['glpiactiveprofile'])
+   ) {
 
       //if treeview is installed
-      if ($plugin->isInstalled("treeview")
-            && $plugin->isActivated("treeview")
-               && class_exists('PluginTreeviewConfig')) {
+      if (
+         $plugin->isInstalled("treeview")
+         && $plugin->isActivated("treeview")
+         && class_exists('PluginTreeviewConfig')
+      ) {
 
          //foreach type in genericobject
          foreach (PluginGenericobjectType::getTypes() as $itemtype => $value) {
@@ -194,7 +218,8 @@ function plugin_init_genericobject() {
    }
 }
 
-function plugin_post_init_genericobject() {
+function plugin_post_init_genericobject()
+{
    Plugin::registerClass(
       'PluginGenericobjectProfile',
       ['addtabon' => ['Profile', 'PluginGenericobjectType']]
@@ -215,53 +240,58 @@ function plugin_post_init_genericobject() {
  *
  * @return array
  */
-function plugin_version_genericobject() {
+function plugin_version_genericobject()
+{
    return [
-      'name'           => __("Objects management", "genericobject"),
-      'version'        => PLUGIN_GENERICOBJECT_VERSION,
-      'author'         => "ITSM-NG Team & siprossii & Teclib",
-      'homepage'       => 'https://github.com/itsmng/genericobject',
-      'license'        => 'GPLv2+',
-      'requirements'   => [
+      'name' => __("Objects management", "genericobject"),
+      'version' => PLUGIN_GENERICOBJECT_VERSION,
+      'author' => "ITSM-NG Team & siprossii & Teclib",
+      'homepage' => 'https://github.com/itsmng/genericobject',
+      'license' => 'GPLv2+',
+      'requirements' => [
          'glpi' => [
             'min' => PLUGIN_GENERICOBJECT_MIN_ITSMNG,
             'max' => PLUGIN_GENERICOBJECT_MAX_ITSMNG,
-            'dev' => true, //Required to allow 9.2-dev
-          ]
-       ]
+            'dev' => true,
+            //Required to allow 9.2-dev
+         ]
+      ]
    ];
 }
 
 
-function plugin_genericobject_haveTypeRight($itemtype, $right) {
+function plugin_genericobject_haveTypeRight($itemtype, $right)
+{
    switch ($itemtype) {
-      case 'PluginGenericobjectType' :
+      case 'PluginGenericobjectType':
          return Session::haveRight("config", $right);
-      default :
+      default:
          return Session::haveRight($itemtype, $right);
    }
 
 }
 
-function plugin_genericobject_includeCommonFields($force = false) {
+function plugin_genericobject_includeCommonFields($force = false)
+{
    //Load genericobject default constants
    if (!$force) {
-      include_once (GENERICOBJECT_DIR."/fields/field.constant.php");
+      include_once(GENERICOBJECT_DIR . "/fields/field.constant.php");
    } else {
-      include (GENERICOBJECT_DIR."/fields/field.constant.php");
+      include(GENERICOBJECT_DIR . "/fields/field.constant.php");
    }
 
    //Include user constants, that must be accessible for all itemtypes
    if (file_exists(GENERICOBJECT_FIELDS_PATH . "/field.constant.php")) {
       if (!$force) {
-         include_once ( GENERICOBJECT_FIELDS_PATH . "/field.constant.php");
+         include_once(GENERICOBJECT_FIELDS_PATH . "/field.constant.php");
       } else {
-         include ( GENERICOBJECT_FIELDS_PATH . "/field.constant.php");
+         include(GENERICOBJECT_FIELDS_PATH . "/field.constant.php");
       }
    }
 }
 
-function plugin_genericobject_haveRight($class, $right) {
+function plugin_genericobject_haveRight($class, $right)
+{
 
    $right_name = PluginGenericobjectProfile::getProfileNameForItemtype($class);
    return Session::haveRight($right_name, $right);
