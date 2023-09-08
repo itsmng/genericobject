@@ -4,9 +4,6 @@
 [![Project Status: Active](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
 [![GitHub release](https://img.shields.io/github/release/itsmng/genericobject.svg)](https://github.com/itsmng/genericobject/releases)
 
-![Screenshot](./genericobject.gif "genericobject")
-
-
 The genericobject plugin allows to extends ITSMNG to manage new types of objects.
 
 
