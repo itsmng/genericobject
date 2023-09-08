@@ -219,7 +219,7 @@ function plugin_version_genericobject() {
    return [
       'name'           => __("Objects management", "genericobject"),
       'version'        => PLUGIN_GENERICOBJECT_VERSION,
-      'author'         => "Teclib' & siprossii",
+      'author'         => "ITSM-NG Team & siprossii & Teclib",
       'homepage'       => 'https://github.com/itsmng/genericobject',
       'license'        => 'GPLv2+',
       'requirements'   => [
