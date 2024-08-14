@@ -540,7 +540,7 @@ class PluginGenericobjectType extends CommonDBTM {
                         'name'  => 'comment',
                         'value' => $this->fields["comment"],
                     ],
-                    __('Active') => !$this->isNewID($ID) ? [
+                    __('Active') => $this->isNewID($ID) ? [
                         'content' => __('No'),
                     ] : [
                         'type'  => 'checkbox',
@@ -552,6 +552,7 @@ class PluginGenericobjectType extends CommonDBTM {
                         'name'  => 'family_type',
                         'itemtype' => 'PluginGenericobjectTypeFamily',
                         'value' => $this->fields["plugin_genericobject_typefamilies_id"],
+                        'actions' => getItemActionButtons(['info', 'add'], PluginGenericobjectTypeFamily::class),
                     ],
                 ]
             ],
