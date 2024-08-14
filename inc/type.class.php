@@ -446,8 +446,7 @@ class PluginGenericobjectType extends CommonDBTM {
       $this->initForm($ID);
 
       $item = new self();
-      //I know this is REALLY ugly...
-      if ($ID == 0) {
+      if ($this->isNewID($ID)) {
          $item->showBehaviorForm($ID);
       }
 
@@ -475,239 +474,218 @@ class PluginGenericobjectType extends CommonDBTM {
       self::includeLocales($this->fields["name"]);
       self::includeConstants($this->fields["name"]);
 
-      $this->showFormHeader($options);
+      $use = [
+         "use_recursivity"   => __("Child entities"),
+         "use_tickets"       => __("Assistance"),
+         "use_deleted"       => __("Item in the dustbin"),
+         "use_notepad"       => _n('Note', 'Notes', 2),
+         "use_history"       => __("Historical"),
+         "use_template"      => __("Templates"),
+         "use_infocoms"      => __("Financial and administratives information"),
+         "use_contracts"     => _n("Contract", "Contracts", 2),
+         "use_documents"     => _n("Document", "Documents", 2),
+         "use_loans"         => _n("Reservation", "Reservations", 2),
+         // Disable unicity feature; see #16
+         // Related code : search for #16
+         "use_unicity"       => __("Fields unicity"),
+         "use_global_search" => __("Global search"),
+         "use_projects"      => _n("Project", "Projects", 2),
+         "use_network_ports" => __("Network connections", "genericobject"),
+         "use_itemdevices"   => _n('Component', 'Components', 2),
+      ];
 
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>" . __("Internal identifier", "genericobject") . "</td>";
-      echo "<td>";
-      if (!$ID) {
-         Html::autocompletionTextField($this, 'name', ['value' => $this->fields["name"]]);
-      } else {
-         echo "<input type='hidden' name='name' value='" . $this->fields["name"] . "'>";
-         echo $this->fields["name"];
-      }
+      $plugins = [
+         "use_plugin_datainjection"      => __("injection file plugin", "genericobject"),
+         //"use_plugin_pdf"                => __("PDF plugin", "genericobject"),
+         "use_plugin_geninventorynumber" => __("geninventorynumber plugin", "genericobject"),
+         "use_plugin_order"              => __("order plugin", "genericobject"),
+         "use_plugin_uninstall"          => __("item's uninstallation plugin", "genericobject"),
+         "use_plugin_simcard"            => __("simcard plugin", "genericobject"),
+         "use_plugin_treeview"           => __("treeview plugin", "genericobject"),
+      ];
 
-      echo "</td>";
-      echo "<td></td>";
-      echo "<td></td>";
-      echo "</tr>";
-
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>" . __("Label") . "</td>";
-      echo "<td>";
-      if ($ID) {
-         $itemtype = $this->fields["itemtype"];
-         echo $itemtype::getTypeName();
-      }
-      echo "</td>";
-      echo "<td rowspan='3' class='middle right'>".__("Comments")."&nbsp;: </td>";
-      echo "<td class='center middle' rowspan='3'><textarea cols='45' rows='4'
-             name='comment' >".$this->fields["comment"]."</textarea></td>";
-      echo "</tr>";
-
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>".__("Active")."</td>";
-      echo "<td>";
-      if (!$ID) {
-         echo __("No");
-      } else {
-         Dropdown::showYesNo("is_active", $this->fields["is_active"]);
-      }
-      echo "</td></td>";
-      echo "</tr>";
-
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>".__("Family of type of objects", 'genericobject')."</td>";
-      echo "<td>";
-      PluginGenericobjectTypeFamily::dropdown([
-         'value' => $this->fields["plugin_genericobject_typefamilies_id"]
-      ]);
-      echo "</td></td>";
-      echo "</tr>";
-
-      echo "<tr class='tab_bg_1'>";
-      echo "<td colspan='2'></td>";
-      echo "</tr>";
-
-      if (!$this->isNewID($ID)) {
-         $canedit = $this->can($ID, CREATE);
-         echo "<tr class='tab_bg_1'><th colspan='4'>";
-         echo __("Behaviour", "genericobject");
-         echo "</th></tr>";
-
-         $use = [
-            "use_recursivity"   => __("Child entities"),
-            "use_tickets"       => __("Assistance"),
-            "use_deleted"       => __("Item in the dustbin"),
-            "use_notepad"       => _n('Note', 'Notes', 2),
-            "use_history"       => __("Historical"),
-            "use_template"      => __("Templates"),
-            "use_infocoms"      => __("Financial and administratives information"),
-            "use_contracts"     => _n("Contract", "Contracts", 2),
-            "use_documents"     => _n("Document", "Documents", 2),
-            "use_loans"         => _n("Reservation", "Reservations", 2),
-            // Disable unicity feature; see #16
-            // Related code : search for #16
-            "use_unicity"       => __("Fields unicity"),
-            "use_global_search" => __("Global search"),
-            "use_projects"      => _n("Project", "Projects", 2),
-            "use_network_ports" => __("Network connections", "genericobject"),
-            "use_itemdevices"   => _n('Component', 'Components', 2),
-         ];
-
-         $plugins = [
-            "use_plugin_datainjection"      => __("injection file plugin", "genericobject"),
-            //"use_plugin_pdf"                => __("PDF plugin", "genericobject"),
-            "use_plugin_geninventorynumber" => __("geninventorynumber plugin", "genericobject"),
-            "use_plugin_order"              => __("order plugin", "genericobject"),
-            "use_plugin_uninstall"          => __("item's uninstallation plugin", "genericobject"),
-            "use_plugin_simcard"            => __("simcard plugin", "genericobject"),
-            "use_plugin_treeview"           => __("treeview plugin", "genericobject"),
-         ];
-
-         $plugin = new Plugin();
-         $odd = 0;
-         foreach ($use as $right => $label) {
-            if (!$odd) {
-               echo "<tr class='tab_bg_2'>";
-            }
-            echo "<td>" . _sx('button', 'Use') . " " . $label . "</td>";
-            echo "<td>";
-
-            switch ($right) {
-               case 'use_deleted':
-                  Html::showCheckbox(['name'    => $right,
-                                      'checked' => $this->canBeDeleted()]);
-                  break;
-
-               case 'use_recursivity':
-                  Html::showCheckbox(['name'    => $right,
-                                      'value'   => $this->canBeRecursive(),
-                                      'checked' => $this->canBeRecursive()]);
-                  break;
-
-               case 'use_notes':
-                  Html::showCheckbox(['name'    => $right,
-                                      'checked' => $this->canUseNotepad()]);
-                  break;
-
-               case 'use_template':
-                  Html::showCheckbox(['name'    => $right,
-                                      'checked' => $this->canUseTemplate()]);
-                  break;
-
-               default :
-                  Html::showCheckbox(['name'    => $right,
-                                      'checked' => $this->fields[$right]]);
-                  break;
-            }
-            echo "</td>";
-            if ($odd == 1) {
-               $odd = 0;
-               echo "</tr>";
-            } else {
-               $odd++;
-            }
-         }
-         if ($odd != 0) {
-            echo "<td></td></tr>";
-         }
-
-         echo "<tr class='tab_bg_1'><th colspan='4'>";
-         echo _n("Plugin", "Plugins", 2);
-         echo "</th></tr>";
-         $odd=0;
-         foreach ($plugins as $right => $label) {
-            if (!$odd) {
-               echo "<tr class='tab_bg_2'>";
-            }
-            echo "<td>" . _sx('button', 'Use') . " " . $label . "</td>";
-            echo "<td>";
-            switch ($right) {
-               case 'use_plugin_datainjection' :
-                  if ($plugin->isActivated('datainjection')) {
-                     Html::showCheckbox(['name'    => $right,
-                                         'checked' => $this->fields[$right]]);
-                  } else {
-                     echo Dropdown::EMPTY_VALUE;
-                     echo "<input type='hidden' name='use_plugin_datainjection' value='0'>\n";
+      $form = [
+        'action'   => $this->getFormURL(),
+        'buttons' => [
+          [
+            'name'  => 'add',
+            'class'  => 'btn btn-secondary',
+            'value' => __('Add'),
+          ],
+        ],
+        'content' => [
+            $this->getTypeName() => [
+                'visible'   => true,
+                'inputs'    => [
+                    __('Internal identifier', 'genericobject') => $this->isNewID($ID) ? [
+                        'type'  => 'text',
+                        'name'  => 'name',
+                        'value' => $this->fields["name"],
+                    ] : [
+                        'content' => <<<HTML
+                            <input type='hidden' name='name' value='{$this->fields["name"]}'>
+                            {$this->fields["name"]}
+                        HTML,
+                    ],
+                    __('Label') => $this->isNewID($ID) ? [] : [
+                        'content' => $this->fields["itemtype"]::getTypeName(),
+                    ],
+                    __('Comments') => [
+                        'type'  => 'textarea',
+                        'name'  => 'comment',
+                        'value' => $this->fields["comment"],
+                    ],
+                    __('Active') => !$this->isNewID($ID) ? [
+                        'content' => __('No'),
+                    ] : [
+                        'type'  => 'checkbox',
+                        'name'  => 'is_active',
+                        'value' => $this->fields["is_active"],
+                    ],
+                    __('Family of type of objects') => [
+                        'type'  => 'select',
+                        'name'  => 'family_type',
+                        'itemtype' => 'PluginGenericobjectTypeFamily',
+                        'value' => $this->fields["plugin_genericobject_typefamilies_id"],
+                    ],
+                ]
+            ],
+            __('Behaviour', 'genericobject') => $this->isNewID($ID) ? [] : [
+               'visible'   => true,
+               'inputs'    => (function() use ($use, $ID) {
+                  $inputs = [];
+                  foreach ($use as $right => $label) {
+                     if (!$this->can($ID, CREATE)) {
+                        continue;
+                     }
+                     $useLabel = _x('button', 'Use') . ' ' . $label;
+                     if ($right === 'use_recursivity') {
+                        $inputs[$useLabel] = [
+                           'type'  => 'checkbox',
+                           'name'  => $right,
+                           'value' => $this->canBeRecursive(),
+                        ];
+                     } else if ($right === 'use_template') {
+                        $inputs[$useLabel] = [
+                           'type'  => 'checkbox',
+                           'name'  => $right,
+                           'value' => $this->canUseTemplate(),
+                        ];
+                     } else if ($right === 'use_deleted') {
+                        $inputs[$useLabel] = [
+                           'type'  => 'checkbox',
+                           'name'  => $right,
+                           'value' => $this->canBeDeleted(),
+                        ];
+                     } else if ($right === 'use_notes') {
+                        $inputs[$useLabel] = [
+                           'type'  => 'checkbox',
+                           'name'  => $right,
+                           'value' => $this->canUseNotepad(),
+                        ];
+                     } else {
+                        $inputs[$useLabel] = [
+                           'type'  => 'checkbox',
+                           'name'  => $right,
+                           'value' => $this->fields[$right] ?? false,
+                        ];
+                     }
                   }
-                  break;
-
-               case 'use_plugin_pdf' :
-                  if ($plugin->isActivated('pdf')) {
-                     Html::showCheckbox(['name'    => $right,
-                                         'checked' => $this->fields[$right]]);
-                  } else {
-                     echo Dropdown::EMPTY_VALUE;
-                     echo "<input type='hidden' name='use_plugin_pdf' value='0'>\n";
+                  return $inputs;
+               })(),
+            ],
+            __('Plugins', 'genericobject') => $this->isNewID($ID) ? [] : [
+               'visible'   => true,
+               'inputs'    => (function() use ($plugins, $ID) {
+                  $plugin = new Plugin();
+                  foreach ($plugins as $right => $label) {
+                     $useLabel = _x('button', 'Use') . ' ' . $label;
+                     switch ($right) {
+                        case 'use_plugin_datainjection' :
+                           $inputs[$useLabel] = $plugin->isActivated('datainjection') ? [
+                              'type'  => 'checkbox',
+                              'name'  => $right,
+                              'value' => $this->canUsePluginDataInjection(),
+                           ] : [
+                              'content' => '<input type="hidden" name="use_plugin_datainjection" value="0">'
+                               .Dropdown::EMPTY_VALUE,
+                           ];
+                           break;
+                        case 'use_plugin_pdf' :
+                           $inputs[$useLabel] = $plugin->isActivated('pdf') ? [
+                              'type'  => 'checkbox',
+                              'name'  => $right,
+                              'value' => $this->canUsePluginPdf(),
+                           ] : [
+                              'content' => '<input type="hidden" name="use_plugin_pdf" value="0">'
+                               .Dropdown::EMPTY_VALUE,
+                           ];
+                           break;
+                        case 'use_plugin_order' :
+                           $inputs[$useLabel] = $plugin->isActivated('order') ? [
+                              'type'  => 'checkbox',
+                              'name'  => $right,
+                              'value' => $this->canUsePluginOrder(),
+                           ] : [
+                              'content' => '<input type="hidden" name="use_plugin_order" value="0">'
+                               .Dropdown::EMPTY_VALUE,
+                           ];
+                           break;
+                        case 'use_plugin_uninstall' :
+                           $inputs[$useLabel] = $plugin->isActivated('uninstall') ? [
+                              'type'  => 'checkbox',
+                              'name'  => $right,
+                              'value' => $this->canUsePluginUninstall(),
+                           ] : [
+                              'content' => '<input type="hidden" name="use_plugin_uninstall" value="0">'
+                               .Dropdown::EMPTY_VALUE,
+                           ];
+                           break;
+                        case 'use_plugin_simcard' :
+                           $inputs[$useLabel] = $plugin->isActivated('simcard') ? [
+                              'type'  => 'checkbox',
+                              'name'  => $right,
+                              'value' => $this->canUsePluginSimcard(),
+                           ] : [
+                              'content' => '<input type="hidden" name="use_plugin_simcard" value="0">'
+                               .Dropdown::EMPTY_VALUE,
+                           ];
+                           break;
+                        case 'use_plugin_treeview' :
+                           $inputs[$useLabel] = $plugin->isActivated('treeview') ? [
+                              'type'  => 'checkbox',
+                              'name'  => $right,
+                              'value' => $this->canUsePluginTreeview(),
+                           ] : [
+                              'content' => '<input type="hidden" name="use_plugin_treeview" value="0">'
+                               .Dropdown::EMPTY_VALUE,
+                           ];
+                           break;
+                        case 'use_plugin_geninventorynumber' :
+                           $inputs[$useLabel] = $plugin->isActivated('geninventorynumber') ? [
+                              'type'  => 'checkbox',
+                              'name'  => $right,
+                              'value' => $this->canUsePluginGenInventoryNumber(),
+                           ] : [
+                              'content' => '<input type="hidden" name="use_plugin_geninventorynumber" value="0">'
+                               .Dropdown::EMPTY_VALUE,
+                           ];
+                           break;
+                        default :
+                           $inputs[$useLabel] = [
+                              'type'  => 'checkbox',
+                              'name'  => $right,
+                              'value' => $this->fields[$right] ?? false,
+                           ];
+                           break;
+                     }
                   }
-                  break;
-
-               case 'use_plugin_order' :
-                  if ($plugin->isActivated('order')) {
-                     Html::showCheckbox(['name'    => $right,
-                                         'checked' => $this->fields[$right]]);
-                  } else {
-                     echo Dropdown::EMPTY_VALUE;
-                     echo "<input type='hidden' name='use_plugin_order' value='0'>\n";
-                  }
-                  break;
-
-               case 'use_plugin_uninstall' :
-                  if ($plugin->isActivated('uninstall')) {
-                     Html::showCheckbox(['name'    => $right,
-                                         'checked' => $this->fields[$right]]);
-                  } else {
-                     echo Dropdown::EMPTY_VALUE;
-                     echo "<input type='hidden' name='use_plugin_uninstall' value='0'>\n";
-                  }
-                  break;
-
-               case 'use_plugin_simcard' :
-                  if ($plugin->isActivated('simcard')) {
-                     Html::showCheckbox(['name'    => $right,
-                                         'checked' => $this->fields[$right]]);
-                  } else {
-                     echo Dropdown::EMPTY_VALUE;
-                     echo "<input type='hidden' name='use_plugin_simcard' value='0'>\n";
-                  }
-                  break;
-               case 'use_plugin_treeview' :
-                  if ($plugin->isActivated('treeview')) {
-                     Html::showCheckbox(['name' => $right,
-                                         'checked' => $this->fields[$right]]);
-                  } else {
-                     echo Dropdown::EMPTY_VALUE;
-                     echo "<input type='hidden' name='use_plugin_treeview' value='0'>\n";
-                  }
-
-                  break;
-               case 'use_plugin_geninventorynumber' :
-                  if ($plugin->isActivated('geninventorynumber')) {
-                     Html::showCheckbox(['name'    => $right,
-                                         'checked' => $this->fields[$right]]);
-                  } else {
-                     echo Dropdown::EMPTY_VALUE;
-                     echo "<input type='hidden' name='use_plugin_geninventorynumber' value='0'>\n";
-                  }
-                  break;
-            }
-            echo "</td>";
-            if ($odd == 1) {
-               $odd = 0;
-               echo "</tr>";
-            } else {
-               $odd++;
-            }
-         }
-         if ($odd != 0) {
-            echo "<td></td></tr>";
-         }
-
-      }
-
-      $this->showFormButtons($options);
+                  return $inputs;
+               })(),
+            ],
+        ],
+      ];
+      renderTwigForm($form);
    }
 
    /**
