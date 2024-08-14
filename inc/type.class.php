@@ -507,16 +507,21 @@ class PluginGenericobjectType extends CommonDBTM {
       $form = [
         'action'   => $this->getFormURL(),
         'buttons' => [
-          [
-            'name'  => 'add',
+          $canedit ? [
+            'name'  => $this->isNewID($ID) ? 'add' : 'update',
             'class'  => 'btn btn-secondary',
-            'value' => __('Add'),
-          ],
+            'value' => $this->isNewID($ID) ? __('Add') : __('Update'),
+          ] : [],
         ],
         'content' => [
             $this->getTypeName() => [
                 'visible'   => true,
                 'inputs'    => [
+                    !$this->isNewID($ID) ? [
+                        'type'  => 'hidden',
+                        'name'  => 'id',
+                        'value' => $this->fields["id"],
+                    ] : [],
                     __('Internal identifier', 'genericobject') => $this->isNewID($ID) ? [
                         'type'  => 'text',
                         'name'  => 'name',

@@ -60,65 +60,68 @@ class PluginGenericobjectField extends CommonDBTM {
          }
       }
 
-      echo "<div class='center'>";
+      echo '<h2>' . __('Fields associated with the object', 'genericobject') . ' : ' . $itemtype::getTypeName() . '</h2>';
       echo "<form id='fieldslist' method='POST' action='$url'>";
-      echo "<table class='tab_cadre_fixe' >";
       echo "<input type='hidden' name='id' value='$id'>";
-      echo "<tr class='tab_bg_1'><th colspan='7'>";
-      echo __("Fields associated with the object", "genericobject") . " : ";
-      echo $itemtype::getTypeName();
-      echo "</th></tr>";
-
-      echo "<tr class='tab_bg_1'>";
-      echo "<th width='10'></th>";
-      echo "<th>" . __("Label", "genericobject") . "</th>";
-      echo "<th>" . __("Name in DB", "genericobject") . "</th>";
-      echo "<th width='10'></th>";
-      echo "<th width='10'></th>";
-      echo "</tr>";
-
-      $total        = count($fields_in_db);
+      $fields = [
+        'checkbox'  => __('Select'),
+        'label'   => __('Label'),
+        'name'    => __('Name in DB'),
+        'actions' => __('Actions'),
+      ];
+      $values = [];
       $global_index = $index = 1;
+      $total        = count($fields_in_db);
       $haveCheckbox = false;
-
       foreach ($fields_in_db as $field => $value) {
          $readonly  = in_array($field, $GO_READONLY_FIELDS);
          $blacklist = in_array($field, $GO_BLACKLIST_FIELDS);
+         $options  = self::getFieldOptions($field, $itemtype);
 
-         self::displayFieldDefinition($url, $itemtype, $field, $index, ($global_index==$total));
-
-         //All backlisted fields cannot be moved, and are listed first
+         $newValue = [];
+         if (!$blacklist && !$readonly) {
+            $newValue['checkbox'] = '<input type="checkbox" name="fields['.$field.']" value="1">';
+         } else {
+            $newValue['checkbox'] = '<i class="fa fa-lock" title="'.__("Read-only field", 'genericobject').'"></i>';
+         }
+         $newValue['label']   = __($options['name'], 'genericobject');
+         $newValue['name']    = $field;
+         $newValue['actions'] = '';
+         if ((!$blacklist || $readonly) && $index > 1) {
+            $newValue['actions'] .= Html::getSimpleForm($url, $CFG_GLPI["root_doc"] . "/pics/deplier_up.png", 'up',
+                                 ['field' => $field, 'action' => 'up', 'itemtype' => $itemtype],
+                                 $CFG_GLPI["root_doc"] . "/pics/deplier_up.png");
+         }
+         if ((!$blacklist || $readonly) && !($global_index == $total)) {
+            $newValue['actions'] .= Html::getSimpleForm($url, $CFG_GLPI["root_doc"] . "/pics/deplier_down.png", 'down',
+                                 ['field' => $field, 'action' => 'down', 'itemtype' => $itemtype],
+                                 $CFG_GLPI["root_doc"] . "/pics/deplier_down.png");
+         }
          if (!$readonly) {
             $index++;
+            $haveCheckbox = !$blacklist;
          }
-
-         if (!$blacklist && !$readonly) {
-            $haveCheckbox = true;
-         }
-
-         //$table = getTableNameForForeignKeyField($field);
-         $used_fields[$field] = $field;
+         $values[] = $newValue;
          $global_index++;
       }
-      echo "</table>";
+      renderTwigTemplate('table.twig', [
+         'values'   => $values,
+         'fields'   => $fields,
+         'minimal'  => true,
+      ]);
+
+
       if ($haveCheckbox) {
-         echo "<table class='tab_glpi' width='950px'>";
-         echo "<tr>";
-         echo "<td><img src='".$CFG_GLPI["root_doc"]."/pics/arrow-left.png'
-                    alt=''></td>";
-         echo "<td class='center' style='white-space:nowrap;'>";
+        echo "<div class='my-2'>";
          echo "<a onclick= \"if ( markCheckboxes('fieldslist') ) return false;\"
                 href='#'>".__('Check all')."</a></td>";
-         echo "<td>/</td>";
-         echo "<td class='center' style='white-space:nowrap;'>";
+         echo " / ";
          echo "<a onclick= \"if ( unMarkCheckboxes('fieldslist') ) return false;\"
-                href='#'>".__('Uncheck all')."</a></td>";
-         echo "<td class='left' width='80%'>";
+                href='#'>".__('Uncheck all')."</a></td> ";
          echo Html::submit(__("Delete permanently"), [
             'name' => 'delete',
          ]);
-         echo "</td></tr>";
-         echo "</table>";
+        echo "</div>";
       }
 
       $dropdownFields = self::dropdownFields("new_field", $itemtype, $used_fields);
@@ -132,13 +135,12 @@ class PluginGenericobjectField extends CommonDBTM {
          echo $dropdownFields;
          echo "</td>";
          echo "<td>";
-         echo "<input type='submit' name='add_field' value=\"" . _sx('button', 'Add') . "\" class='submit'>";
+         echo "<input type='submit' name='add_field' value=\"" . _sx('button', 'Add') . "\" class='btn btn-secondary'>";
          echo "</tr>";
          echo "</table>";
       }
 
       Html::closeForm();
-      echo "</div>";
    }
 
    /**
