@@ -685,7 +685,7 @@ class PluginGenericobjectObject extends CommonDBTM {
 
             case "longtext":
             case "text":
-               echo "<textarea cols='40' rows='4' name='" . $name . "'>" . $value .
+               echo "<textarea cols='40' rows='4' name='" . $name . "' class='form-control'>" . $value .
                      "</textarea>";
                break;
 
@@ -716,11 +716,11 @@ class PluginGenericobjectObject extends CommonDBTM {
 
             case "float":
             case 'decimal':
-               echo "<input type='number' name='$name' value='$value' step='any' />";
+               echo "<input type='number' name='$name' value='$value' step='any' class='form-control' />";
                break;
 
             default:
-                  echo "<input type='text' name='$name' value='$value'>";
+                  echo "<input type='text' name='$name' class='form-control' value='$value'>";
                   break;
 
          }
