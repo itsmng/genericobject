@@ -2251,7 +2251,6 @@ class PluginGenericobjectType extends CommonDBTM {
       $migration->addField($table, "use_plugin_simcard", "bool");
       $migration->addField($table, "use_plugin_treeview", "bool");
       $migration->addField($table, "use_itemdevices", "bool");
-      $migration->addField($table, "impact_icon", "string");     // Modif EV impact
       $migration->migrationOneTable($table);
 
       //Normalize names and itemtypes (prior to using them).

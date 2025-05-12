@@ -32,6 +32,7 @@ class PluginGenericobjectObject extends CommonDBTM {
    use Glpi\Features\Clonable;
 
    protected $objecttype;
+   protected $table;
 
    //Internal field counter
    private $cpt = 0;

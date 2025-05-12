@@ -42,7 +42,7 @@ class %%INJECTIONCLASS%% extends %%CLASSNAME%%
 
    static function getTable($classname = null) {
 
-      $parenttype = get_parent_class();
+      $parenttype = parent::class;
       return $parenttype::getTable();
 
    }
