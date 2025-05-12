@@ -199,12 +199,125 @@ class PluginGenericobjectType extends CommonDBTM {
       return true;
    }
 
-   function prepareInputForUpdate($input) {
+  public function prepareInputForUpdate($input) {
+      // Handle impact_icon
+      $input = $this->handleImpactIconUpdate($input);
+
+      // Handle use_impact
+       $input = $this->handleUseImpactUpdate($input);
+
       //If itemtype is active : register it !
       if (isset ($input["is_active"]) && $input["is_active"]) {
          self::registerOneType($this->fields['itemtype']);
       }
       return $input;
+   }
+
+
+
+   public function handleImpactIconUpdate($input)
+   {
+      // Read submitted icon
+       $icon = $input['_impact_icon'][0] ?? null;
+
+      // Icon wasn't submitted, nothing more to do
+       if (empty($icon)) {
+           return $input;
+       }
+
+      // Convert to realpath
+       $icon_path = realpath(GLPI_TMP_DIR . "/$icon");
+
+      // Realpath didn't find the file, shouldn't really happenn but just in case
+       if (!$icon_path) {
+           return $input;
+       }
+
+      // Wrong file type, ignore
+       if (!Document::isImage($icon_path)) {
+           return $input;
+       }
+
+      // File is outside of GLPI_TMP_DIR
+       if (!str_starts_with($icon_path, realpath(GLPI_TMP_DIR))) {
+           trigger_error("Trying to read forbidden file: $icon_path", E_USER_WARNING);
+           return $input;
+       }
+
+      // Reread base file name
+       $icon_filename = pathinfo($icon_path, PATHINFO_BASENAME);
+
+      // Remove previous icon if exist
+       $existing_icon_path = self::getImpactIconFileStoragePath(
+           $this->fields['impact_icon'],
+           $this->fields['itemtype']
+       );
+       if (
+           $existing_icon_path
+           && file_exists($existing_icon_path)
+           && str_starts_with(
+               realpath($existing_icon_path),
+               realpath(GLPI_PLUGIN_DOC_DIR . "/genericobject/impact_icons/")
+           )
+       ) {
+           unlink($existing_icon_path);
+       }
+
+      // Move file and update input on success
+       $icons_dir = GLPI_PLUGIN_DOC_DIR . '/genericobject/impact_icons/';
+       if (!is_dir($icons_dir) && !mkdir($icons_dir)) {
+           trigger_error(sprintf('Unable to create "%s" directory.', $icons_dir), E_USER_WARNING);
+           return $input;
+       }
+
+       $new_path = self::getImpactIconFileStoragePath(
+           $icon_filename,
+           $this->fields['itemtype']
+       );
+       if (rename($icon_path, $new_path)) {
+           $input['impact_icon'] = $icon_filename;
+       }
+
+       return $input;
+   }
+
+   public function handleUseImpactUpdate($input)
+   {
+       $use_impact = $input['use_impact'] ?? null;
+       unset($input['use_impact']);
+
+      // Value wasn't modified, nothing to be done
+       if ($use_impact === null) {
+           return $input;
+       }
+
+      // Impact analysis will now be enabled, update conf if needed
+       if ($use_impact && !Impact::isEnabled($this->fields['itemtype'])) {
+           $enabled = Config::getConfigurationValue('core', Impact::CONF_ENABLED);
+           $enabled = importArrayFromDB($enabled);
+           $enabled[] = $this->fields['itemtype'];
+           Config::setConfigurationValues('core', [
+               Impact::CONF_ENABLED => exportArrayToDB($enabled)
+           ]);
+           return $input;
+       }
+
+      // Impact analysis will now be disabled, update config if needed
+       if (!$use_impact && Impact::isEnabled($this->fields['itemtype'])) {
+           $enabled = Config::getConfigurationValue('core', Impact::CONF_ENABLED);
+           $enabled = importArrayFromDB($enabled);
+           $enabled = array_filter(
+               $enabled,
+               fn($i) => $i != $this->fields['itemtype']
+           );
+           Config::setConfigurationValues('core', [
+               Impact::CONF_ENABLED => exportArrayToDB($enabled)
+           ]);
+
+           return $input;
+       }
+
+       return $input;
    }
 
    function post_updateItem($history = 1) {
@@ -534,7 +647,6 @@ class PluginGenericobjectType extends CommonDBTM {
          echo "<tr class='tab_bg_1'><th colspan='4'>";
          echo __("Behaviour", "genericobject");
          echo "</th></tr>";
-
          $use = [
             "use_recursivity"   => __("Child entities"),
             "use_tickets"       => __("Assistance"),
@@ -553,6 +665,14 @@ class PluginGenericobjectType extends CommonDBTM {
             "use_projects"      => _n("Project", "Projects", 2),
             "use_network_ports" => __("Network connections", "genericobject"),
             "use_itemdevices"   => _n('Component', 'Components', 2),
+            "use_Appliance_Item"=> _n('Applicatif','Applicatifs',2),                   
+            "use_KnowbaseItem" => __("Knowledge base"),                                
+            "use_Item_OperatingSystem"=> _n('Operating system','Operating systems',2), 
+            "use_Item_Disk"=> __("Partition"),                                         
+            "use_Item_SoftwareVersion"=> __("Software Version"),                       
+            "use_Link"=> _n('External link','External links',2),                       
+            "use_Certificate_Item"=> __("DNS name"),                                   
+            "use_Domain_Item"=> _n('Domain','Domains',2),                              
          ];
 
          $plugins = [
@@ -595,7 +715,11 @@ class PluginGenericobjectType extends CommonDBTM {
                   Html::showCheckbox(['name'    => $right,
                                       'checked' => $this->canUseTemplate()]);
                   break;
-
+               case 'use_impact':
+                   Html::showCheckbox([
+                     'name'    => $right,
+                     'checked' => Impact::isEnabled($this->fields['itemtype'])]);
+                  break;
                default :
                   Html::showCheckbox(['name'    => $right,
                                       'checked' => $this->fields[$right]]);
@@ -612,6 +736,26 @@ class PluginGenericobjectType extends CommonDBTM {
          if ($odd != 0) {
             echo "<td></td></tr>";
          }
+         echo "<tr class='tab_bg_1'><th colspan='4'>";
+         echo __("Icon (impact analysis)", "genericobject");
+         echo "</th></tr>";
+
+         echo '<tr>';
+         echo "<td colspan='4'>";
+         $src = $this->getImpactIconUrl() ?? $CFG_GLPI["root_doc"] . "/pics/impact/default.png";
+         echo "<img src='$src' height='128px'></img>";
+         echo "</td>";
+         echo '</tr>';
+
+         echo '<tr>';
+         echo "<td colspan='2'>";
+         echo Html::file([
+             'name'       => "impact_icon",
+             'onlyimages' => true,
+         ]);
+         echo "</td>";
+         echo "<td></td>";
+         echo '</tr>';
 
          echo "<tr class='tab_bg_1'><th colspan='4'>";
          echo _n("Plugin", "Plugins", 2);
@@ -1894,11 +2038,9 @@ class PluginGenericobjectType extends CommonDBTM {
       return $this->fields['use_history'];
    }
 
-
    function canUseDocuments() {
       return $this->fields['use_documents'];
    }
-
 
    function canUseInfocoms() {
       return $this->fields['use_infocoms'];
@@ -1907,7 +2049,20 @@ class PluginGenericobjectType extends CommonDBTM {
    function canUseItemDevice() {
       return $this->fields['use_itemdevices'];
    }
+   function canUseApplianceItem()          {return $this->fields['use_Appliance_Item'];}              
+   function canUseKnowbaseItem()           {return $this->fields['use_KnowbaseItem'];}                
+   function canUseImpact()                 {return Impact::isEnabled($this->fields['itemtype']);}      
+   function canUseItem_OperatingSystem()   {return $this->fields['use_Item_OperatingSystem'];}          
+   function canUseItem_Disk()              {return $this->fields['use_Item_Disk'];}                     
+   function canUseItem_SoftwareVersion()   {return $this->fields['use_Item_SoftwareVersion'];}            
+   function canUseLink()                   {return $this->fields['use_Link'];}                          
+   function canUseCertificate_Item()       {return $this->fields['use_Certificate_Item'];}              
+   function canUseDomain_Item()            {return $this->fields['use_Domain_Item'];}                   
 
+   function canUseComputer() {
+      return $this->fields['use_computer'];
+   }
+  
    function canUseContracts() {
       return $this->fields['use_contracts'];
    }
@@ -1916,7 +2071,6 @@ class PluginGenericobjectType extends CommonDBTM {
    function canUseGlobalSearch() {
       return $this->fields['use_global_search'];
    }
-
 
    function canUseNetworkPorts() {
       return $this->fields['use_network_ports'];
@@ -2062,9 +2216,21 @@ class PluginGenericobjectType extends CommonDBTM {
                            `linked_itemtypes` text NULL,
                            `plugin_genericobject_typefamilies_id` INT( 11 ) NOT NULL DEFAULT 0,
                            `use_itemdevices` tinyint(1) NOT NULL default '0',
-                           PRIMARY KEY ( `id` )
+                            PRIMARY KEY ( `id` )
                            ) ENGINE = InnoDB COMMENT = 'Object types definition table' DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;";
          $DB->query($query) or die($DB->error());
+      }
+
+      if (version_compare(PLUGIN_GENERICOBJECT_VERSION, '2.13.0', '==')) {
+          $migration->addField($table, "use_appliance_item", "tinyint(1) NOT NULL default '0'");
+          $migration->addField($table, "use_item_operating_system", "tinyint(1) NOT NULL default '0'");
+          $migration->addField($table, "use_item_disk", "tinyint(1) NOT NULL default '0'");
+          $migration->addField($table, "use_item_softwareversion", "tinyint(1) NOT NULL default '0'");
+          $migration->addField($table, "use_link", "tinyint(1) NOT NULL default '0'");
+          $migration->addField($table, "use_certificate_item", "tinyint(1) NOT NULL default '0'");
+          $migration->addField($table, "use_domain_item", "tinyint(1) NOT NULL default '0'");
+          $migration->addField($table, "impact_icon", "varchar(255) default NULL");
+          $migration->addField($table, "use_knowledgebase_item", "tinyint(1) NOT NULL default '0'");
       }
 
       $migration->addField($table, "use_network_ports", "bool");
@@ -2085,6 +2251,7 @@ class PluginGenericobjectType extends CommonDBTM {
       $migration->addField($table, "use_plugin_simcard", "bool");
       $migration->addField($table, "use_plugin_treeview", "bool");
       $migration->addField($table, "use_itemdevices", "bool");
+      $migration->addField($table, "impact_icon", "string");     // Modif EV impact
       $migration->migrationOneTable($table);
 
       //Normalize names and itemtypes (prior to using them).
@@ -2414,4 +2581,80 @@ class PluginGenericobjectType extends CommonDBTM {
          );
       }
    }
+
+   /*
+   * Given an impact icon filename, return the expected full or relative path
+   * where it should be stored
+   *
+   * @param string $filename
+   * @param string $itemtype Impact itemtype, needed to avoid filename colision
+   * @param bool   $relative (default: false)
+   *
+   * @return null|string
+   */
+   public static function getImpactIconFileStoragePath(
+      ?string $filename,
+      string $itemtype,
+      bool $relative = false
+   ): ?string {
+      if (empty($filename)) {
+          return null;
+      }
+
+     // Make sure $filename does not contains any directory changes like ".."
+      if ($filename != pathinfo($filename)['basename']) {
+          trigger_error(
+              "Trying to access forbidden file: $filename",
+              E_USER_WARNING
+          );
+          return null;
+      }
+
+      $filename = "{$itemtype}_{$filename}";
+      $path = GLPI_PLUGIN_DOC_DIR . "/genericobject/impact_icons/$filename";
+
+      if ($relative) {
+          $path = str_replace(GLPI_ROOT, "", $path);
+      }
+
+      return $path;
+  }
+
+ /**
+  * Get file path to impact icon file
+  *
+  * @return string|null
+  */
+  public function getImpactIconFilePath(): ?string
+  {
+      if (empty($this->fields['impact_icon'])) {
+          return null;
+      }
+
+      $path = self::getImpactIconFileStoragePath(
+          $this->fields['impact_icon'],
+          $this->fields['itemtype']
+      );
+      if (empty($path) || !file_exists($path)) {
+          return null;
+      }
+
+      return $path;
+  }
+
+ /**
+  * Get public URL to impact icon file
+  *
+  * @return null|string
+  */
+  public function getImpactIconUrl($full = true): ?string
+  {
+     // Check that the file exist
+      if (!$this->getImpactIconFilePath()) {
+          return null;
+      }
+
+      return Plugin::getWebDir('genericobject', $full) . "/front/getimpacticon.php?itemtype=" . $this->fields['itemtype'];
+  }
 }
+

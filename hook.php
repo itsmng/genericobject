@@ -100,8 +100,6 @@ function plugin_uninstall_addUninstallTypes($uninstal_types = []) {
  * @return boolean
  */
 function plugin_genericobject_install() {
-   global $DB;
-
    include_once(GENERICOBJECT_DIR."/inc/object.class.php");
    include_once(GENERICOBJECT_DIR."/inc/type.class.php");
 
@@ -131,6 +129,10 @@ function plugin_genericobject_install() {
    if (!is_dir(GENERICOBJECT_CLASS_PATH)) {
       @ mkdir(GENERICOBJECT_CLASS_PATH, 0755, true)
          or die("Can't create folder " . GENERICOBJECT_CLASS_PATH);
+   }
+   $icons_dir = GLPI_PLUGIN_DOC_DIR . '/genericobject/impact_icons/';
+   if (!is_dir($icons_dir)) {
+       mkdir($icons_dir);
    }
 
    //Init plugin & types

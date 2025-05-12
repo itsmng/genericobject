@@ -28,7 +28,7 @@
  * -------------------------------------------------------------------------
  */
 
-define('PLUGIN_GENERICOBJECT_VERSION', '2.12.0');
+define('PLUGIN_GENERICOBJECT_VERSION', '2.13.0');
 
 // Minimal GLPI version, inclusive
 define("PLUGIN_GENERICOBJECT_MIN_ITSMNG", "9.5");
@@ -107,7 +107,7 @@ $go_autoloader->register();
 function plugin_init_genericobject()
 {
    global $PLUGIN_HOOKS, $GO_BLACKLIST_FIELDS,
-   $GENERICOBJECT_PDF_TYPES, $GO_LINKED_TYPES, $GO_READONLY_FIELDS;
+   $GENERICOBJECT_PDF_TYPES, $GO_LINKED_TYPES, $GO_READONLY_FIELDS, $CFG_GLPI;
 
    $GO_READONLY_FIELDS = ["is_helpdesk_visible", "comment"];
 
@@ -135,8 +135,8 @@ function plugin_init_genericobject()
       'Software',
       'Monitor',
       'Printer',
-      'NetworkEquipment'
-   ];
+      'NetworkEquipment',
+    ];
 
    $PLUGIN_HOOKS['csrf_compliant']['genericobject'] = true;
    $GENERICOBJECT_PDF_TYPES = [];
@@ -215,6 +215,29 @@ function plugin_init_genericobject()
          PluginGenericobjectType::getType(),
          'getTypesForFormcreator'
       ];
+      
+      foreach ((new PluginGenericobjectType())->find([]) as $type) {
+         $name = $type['name']; 
+         $classname = 'PluginGenericobject' . str_replace(' ', '', ucwords(str_replace('_', ' ', $name)));
+               
+         if (!in_array($classname, $CFG_GLPI['impact_asset_types'])) {
+             $CFG_GLPI['impact_asset_types'][$classname::getType()] = 'pics/impact/genericobject.png';
+         }
+         if (!in_array($classname, $CFG_GLPI['appliance_types'])) {
+             $CFG_GLPI['appliance_types'][] = $classname;
+         }
+         if (!in_array($classname, $CFG_GLPI['certificate_types'])) {
+             $CFG_GLPI['certificate_types'][] = $classname;
+         }
+         if (!in_array($classname, $CFG_GLPI['domain_types'])) {
+             $CFG_GLPI['domain_types'][] = $classname;
+         }
+
+         
+         if (class_exists($classname)) {
+             Plugin::registerClass($classname);
+         }
+      }
    }
 }
 
@@ -290,6 +313,7 @@ function plugin_genericobject_includeCommonFields($force = false)
    }
 }
 
+
 function plugin_genericobject_haveRight($class, $right)
 {
 
@@ -297,3 +321,4 @@ function plugin_genericobject_haveRight($class, $right)
    return Session::haveRight($right_name, $right);
 
 }
+

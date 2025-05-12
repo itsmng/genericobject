@@ -84,7 +84,6 @@ class PluginGenericobjectObject extends CommonDBTM {
 
    public function getCloneRelations() :array {
       return [
-         Computer_Item::class,
          Contract_Item::class,
          Document_Item::class,
          Infocom::class,
@@ -178,8 +177,25 @@ class PluginGenericobjectObject extends CommonDBTM {
          "contract_types"         => $item->canUseContracts(),
          "unicity_types"          => $item->canUseUnicity(),
          "location_types"         => isset($fields['locations_id']),
-         "itemdevices_types"      => $item->canUseItemDevice()
-      ]);
+         "itemdevices_types"      => $item->canUseItemDevice(),   
+         "itemdevicememory_types"        => $item->canUseItemDevice(),
+         "itemdevicepowersupply_types"   => $item->canUseItemDevice(),
+         "itemdevicenetworkcard_types"   => $item->canUseItemDevice(),
+         "itemdeviceharddrive_types"     => $item->canUseItemDevice(),
+         "itemdevicebattery_types"       => $item->canUseItemDevice(),
+         "itemdevicefirmware_types"      => $item->canUseItemDevice(),
+         "itemdevicesimcard_types"       => $item->canUseItemDevice(),
+         "itemdevicegeneric_types"       => $item->canUseItemDevice(),
+         "itemdevicepci_types"           => $item->canUseItemDevice(),
+         "itemdevicesensor_types"        => $item->canUseItemDevice(),
+         "itemdeviceprocessor_types"     => $item->canUseItemDevice(),
+         "itemdevicesoundcard_types"     => $item->canUseItemDevice(),
+         "itemdevicegraphiccard_types"   => $item->canUseItemDevice(),
+         "itemdevicemotherboard_types"   => $item->canUseItemDevice(),
+         "itemdevicecamera_types"        => $item->canUseItemDevice(),
+         "itemdevicedrive_types"         => $item->canUseItemDevice(),
+         "itemdevicecontrol_types"       => $item->canUseItemDevice(),
+     ]);
 
       if (plugin_genericobject_haveRight($class, READ)) {
          //Change url for adding a new object, depending on template management activation
@@ -356,50 +372,34 @@ class PluginGenericobjectObject extends CommonDBTM {
       $tabs = [];
 
       $this->addDefaultFormTab($tabs);
-
+     
       if (!$this->isNewItem()) {
 
-         if ($this->canUseNetworkPorts()) {
-            $this->addStandardTab('NetworkPort', $tabs, $options);
-         }
-
-         if ($this->canUseItemDevice()) {
-            $this->addStandardTab('Item_Devices', $tabs, $options);
-         }
-
-         if ($this->canUseInfocoms()) {
-            $this->addStandardTab('Infocom', $tabs, $options);
-         }
-
-         if ($this->canUseContracts()) {
-            $this->addStandardTab('Contract_Item', $tabs, $options);
-         }
-
-         if ($this->canUseDocuments()) {
-            $this->addStandardTab('Document_Item', $tabs, $options);
-         }
-
+         if ($this->canUseImpact()) {$this->addImpactTab($tabs, $options);}                                             
+         if ($this->canUseItem_OperatingSystem()) {$this->addStandardTab('Item_OperatingSystem', $tabs, $options);}     
+         if ($this->canUseItemDevice()) {$this->addStandardTab('Item_Devices', $tabs, $options);}
+         if ($this->canUseItem_Disk()) {$this->addStandardTab('Item_Disk', $tabs, $options);}                            
+         if ($this->canUseItem_SoftwareVersion()) {$this->addStandardTab('Item_SoftwareVersion', $tabs, $options);}     
+         if ($this->canUseNetworkPorts()) {$this->addStandardTab('NetworkPort', $tabs, $options);}
+         if ($this->canUseInfocoms()) {$this->addStandardTab('infocom', $tabs, $options);}                               
+         if ($this->canUseContracts()) {$this->addStandardTab('Contract_Item', $tabs, $options);}
+         if ($this->canUseDocuments()) {$this->addStandardTab('Document_Item', $tabs, $options);}
+         if ($this->canUseKnowbaseItem()) {$this->addStandardTab('KnowbaseItem_Item', $tabs, $options);}                
          if ($this->canUseTickets()) {
             $this->addStandardTab('Ticket', $tabs, $options);
             $this->addStandardTab('Item_Problem', $tabs, $options);
             $this->addStandardTab('Change_Item', $tabs, $options);
          }
-
-         if ($this->canUseNotepad()) {
-            $this->addStandardTab('Notepad', $tabs, $options);
-         }
-
-         if ($this->canBeReserved()) {
-            $this->addStandardTab('Reservation', $tabs, $options);
-         }
-
-         if ($this->canUseHistory()) {
-            $this->addStandardTab('Log', $tabs, $options);
-         }
+         if ($this->canUseLink()) {$this->addStandardTab('Link', $tabs, $options);}                                        
+         if ($this->canUseCertificate_Item()) {$this->addStandardTab('Certificate_Item', $tabs, $options);}                
+         if ($this->canUseNotepad()) {$this->addStandardTab('Notepad', $tabs, $options);}
+         if ($this->canBeReserved()) {$this->addStandardTab('Reservation', $tabs, $options);}
+         if ($this->canUseDomain_Item()) {$this->addStandardTab('Domain_Item', $tabs, $options);}                        
+         if ($this->canUseApplianceItem()) {$this->addStandardTab('Appliance_Item', $tabs, $options);}                   
+         if ($this->canUseHistory()) {$this->addStandardTab('Log', $tabs, $options);}
       }
       return $tabs;
    }
-
 
    //------------------------ CAN methods -------------------------------------//
 
@@ -415,11 +415,9 @@ class PluginGenericobjectObject extends CommonDBTM {
       return ($this->objecttype->canUseContracts() && Session::haveRight("contract", READ));
    }
 
-
    function canUseTemplate() {
       return $this->objecttype->canUseTemplate();
    }
-
 
    function canUseNotepad() {
       return $this->objecttype->canUseNotepad();
@@ -431,7 +429,6 @@ class PluginGenericobjectObject extends CommonDBTM {
       // FIXME : The bug may be in GLPI itself
       return ($this->objecttype->canUseUnicity() && Session::haveRight("config", READ));
    }
-
 
    function canUseDocuments() {
       return ($this->objecttype->canUseDocuments() && Session::haveRight("document", READ));
@@ -508,9 +505,18 @@ class PluginGenericobjectObject extends CommonDBTM {
    function canUseItemDevice() {
       return ($this->objecttype->canUseItemDevice());
    }
+   
+   function canUseKnowbaseItem()           {return ($this->objecttype->canUseKnowbaseItem());}           // MODIF_EV
+   function canUseApplianceItem()          {return ($this->objecttype->canUseApplianceItem());}          // MODIF_EV
+   function canUseImpact()                 {return ($this->objecttype->canUseImpact());}                 // MODIF_EV           
+   function canUseItem_OperatingSystem()   {return ($this->objecttype->canUseItem_OperatingSystem());}   // MODIF_EV  
+   function canUseItem_Disk()              {return ($this->objecttype->canUseItem_Disk());}              // MODIF_EV  
+   function canUseItem_SoftwareVersion()   {return ($this->objecttype->canUseItem_SoftwareVersion());}   // MODIF_EV    
+   function canUseLink()                   {return ($this->objecttype->canUseLink());}                   // MODIF_EV  
+   function canUseCertificate_Item()       {return ($this->objecttype->canUseCertificate_Item());}       // MODIF_EV  
+   function canUseDomain_Item()            {return ($this->objecttype->canUseDomain_Item());}            // MODIF_EV  
 
-   function title() {
-   }
+   function title() { }
 
 
    function showForm($id, $options = [], $previsualisation = false) {
@@ -788,13 +794,13 @@ class PluginGenericobjectObject extends CommonDBTM {
 
    function cleanDBonPurge() {
       $parameters = ['items_id' => $this->getID(), 'itemtype' => get_called_class()];
-      $types      = ['Computer_Item', 'ReservationItem', 'Document_Item', 'Infocom', 'Contract_Item'];
+      $types      = ['ReservationItem', 'Document_Item', 'Infocom', 'Contract_Item'];
       foreach ($types as $type) {
          $item = new $type();
          $item->deleteByCriteria($parameters);
       }
 
-      foreach (['NetworkPort', 'Computer_Item', 'ReservationItem',
+      foreach (['NetworkPort', 'ReservationItem',
                 'ReservationItem', 'Document_Item', 'Infocom', 'Contract_Item',
                 'Item_Problem', 'Change_Item', 'Item_Project'] as $itemtype) {
          $ip = new $itemtype();
