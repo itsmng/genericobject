@@ -568,6 +568,8 @@ class PluginGenericobjectType extends CommonDBTM {
    }
 
    function showBehaviorForm($ID, $options = []) {
+      global $CFG_GLPI;
+
       if ($ID > 0) {
          $this->check($ID, READ);
       } else {
@@ -665,14 +667,14 @@ class PluginGenericobjectType extends CommonDBTM {
             "use_projects"      => _n("Project", "Projects", 2),
             "use_network_ports" => __("Network connections", "genericobject"),
             "use_itemdevices"   => _n('Component', 'Components', 2),
-            "use_Appliance_Item"=> _n('Applicatif','Applicatifs',2),                   
-            "use_KnowbaseItem" => __("Knowledge base"),                                
-            "use_Item_OperatingSystem"=> _n('Operating system','Operating systems',2), 
-            "use_Item_Disk"=> __("Partition"),                                         
-            "use_Item_SoftwareVersion"=> __("Software Version"),                       
-            "use_Link"=> _n('External link','External links',2),                       
-            "use_Certificate_Item"=> __("DNS name"),                                   
-            "use_Domain_Item"=> _n('Domain','Domains',2),                              
+            "use_appliance_item"=> _n('Applicatif','Applicatifs',2),                   
+            "use_knowledgebase_item" => __("Knowledge base"),                                
+            "use_item_operating_system"=> _n('Operating system','Operating systems',2), 
+            "use_item_disk"=> __("Partition"),                                         
+            "use_item_softwareversion"=> __("Software Version"),                       
+            "use_link"=> _n('External link','External links',2),                       
+            "use_certificate_item"=> __("DNS name"),                                   
+            "use_domain_item"=> _n('Domain','Domains',2),                              
          ];
 
          $plugins = [
