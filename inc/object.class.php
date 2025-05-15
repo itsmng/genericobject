@@ -33,6 +33,7 @@ class PluginGenericobjectObject extends CommonDBTM {
 
    protected $objecttype;
    protected $table;
+   protected $usenotepadrights;
 
    //Internal field counter
    private $cpt = 0;

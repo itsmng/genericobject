@@ -2051,15 +2051,15 @@ class PluginGenericobjectType extends CommonDBTM {
    function canUseItemDevice() {
       return $this->fields['use_itemdevices'];
    }
-   function canUseApplianceItem()          {return $this->fields['use_Appliance_Item'];}              
-   function canUseKnowbaseItem()           {return $this->fields['use_KnowbaseItem'];}                
+   function canUseApplianceItem()          {return $this->fields['use_appliance_item'];}              
+   function canUseKnowbaseItem()           {return $this->fields['use_knowledgebase_item'];}                
    function canUseImpact()                 {return Impact::isEnabled($this->fields['itemtype']);}      
-   function canUseItem_OperatingSystem()   {return $this->fields['use_Item_OperatingSystem'];}          
-   function canUseItem_Disk()              {return $this->fields['use_Item_Disk'];}                     
-   function canUseItem_SoftwareVersion()   {return $this->fields['use_Item_SoftwareVersion'];}            
-   function canUseLink()                   {return $this->fields['use_Link'];}                          
-   function canUseCertificate_Item()       {return $this->fields['use_Certificate_Item'];}              
-   function canUseDomain_Item()            {return $this->fields['use_Domain_Item'];}                   
+   function canUseItem_OperatingSystem()   {return $this->fields['use_item_operating_system'];}          
+   function canUseItem_Disk()              {return $this->fields['use_item_disk'];}                     
+   function canUseItem_SoftwareVersion()   {return $this->fields['use_item_softwareversion'];}            
+   function canUseLink()                   {return $this->fields['use_link'];}                          
+   function canUseCertificate_Item()       {return $this->fields['use_certificate_item'];}              
+   function canUseDomain_Item()            {return $this->fields['use_domain_item'];}                   
 
    function canUseComputer() {
       return $this->fields['use_computer'];
