@@ -45,6 +45,14 @@ if (!defined("GENERICOBJECT_DOC_DIR")) {
       mkdir(GENERICOBJECT_DOC_DIR);
    }
 }
+
+if (!defined("GENERICOBJECT_PICTURE_DIR")) {
+   define("GENERICOBJECT_PICTURE_DIR", GLPI_PICTURE_DIR . "/genericobject");
+   if (!file_exists(GENERICOBJECT_PICTURE_DIR)) {
+      mkdir(GENERICOBJECT_PICTURE_DIR);
+   }
+}
+
 if (!defined("GENERICOBJECT_FRONT_PATH")) {
    define("GENERICOBJECT_FRONT_PATH", GENERICOBJECT_DOC_DIR . "/front");
    if (!file_exists(GENERICOBJECT_FRONT_PATH)) {
@@ -221,7 +229,16 @@ function plugin_init_genericobject()
          $classname = 'PluginGenericobject' . str_replace(' ', '', ucwords(str_replace('_', ' ', $name)));
                
          if (!in_array($classname, $CFG_GLPI['impact_asset_types'])) {
-             $CFG_GLPI['impact_asset_types'][$classname::getType()] = 'pics/impact/genericobject.png';
+             $object = new $classname();
+             $object->getEmpty();
+             $reflection = new ReflectionClass($object);
+             $type = $reflection->getProperty('objecttype');
+             $type->setAccessible(true);
+             $icon = $type->getValue($object)->fields['impact_icon'];
+             $icon_path = $CFG_GLPI['root_doc'] . 'front/document.send.php?file='
+                 . str_replace(GLPI_ROOT . '/files/', "", GENERICOBJECT_PICTURE_DIR . '/')
+                 . $classname . '_' . $icon;
+             $CFG_GLPI['impact_asset_types'][$classname::getType()] = $icon_path;
          }
          if (!in_array($classname, $CFG_GLPI['appliance_types'])) {
              $CFG_GLPI['appliance_types'][] = $classname;

@@ -217,6 +217,7 @@ class PluginGenericobjectType extends CommonDBTM {
 
    public function handleImpactIconUpdate($input)
    {
+       global $CFG_GLPI;
       // Read submitted icon
        $icon = $input['_impact_icon'][0] ?? null;
 
@@ -244,8 +245,8 @@ class PluginGenericobjectType extends CommonDBTM {
            return $input;
        }
 
-      // Reread base file name
-       $icon_filename = pathinfo($icon_path, PATHINFO_BASENAME);
+      // random file name + extension
+       $icon_filename = rand() . pathinfo($icon_path, PATHINFO_EXTENSION);
 
       // Remove previous icon if exist
        $existing_icon_path = self::getImpactIconFileStoragePath(
@@ -257,15 +258,15 @@ class PluginGenericobjectType extends CommonDBTM {
            && file_exists($existing_icon_path)
            && str_starts_with(
                realpath($existing_icon_path),
-               realpath(GLPI_PLUGIN_DOC_DIR . "/genericobject/impact_icons/")
+               realpath(GENERICOBJECT_PICTURE_DIR)
            )
        ) {
            unlink($existing_icon_path);
        }
 
       // Move file and update input on success
-       $icons_dir = GLPI_PLUGIN_DOC_DIR . '/genericobject/impact_icons/';
-       if (!is_dir($icons_dir) && !mkdir($icons_dir)) {
+       $icons_dir = GENERICOBJECT_PICTURE_DIR;
+       if (!is_dir($icons_dir) && !mkdir($icons_dir, 0777, true)) {
            trigger_error(sprintf('Unable to create "%s" directory.', $icons_dir), E_USER_WARNING);
            return $input;
        }
@@ -277,6 +278,7 @@ class PluginGenericobjectType extends CommonDBTM {
        if (rename($icon_path, $new_path)) {
            $input['impact_icon'] = $icon_filename;
        }
+       $CFG_GLPI['impact_asset_types'][$this->fields['itemtype']] = str_replace(GLPI_ROOT, "", $new_path);
 
        return $input;
    }
@@ -2612,7 +2614,7 @@ class PluginGenericobjectType extends CommonDBTM {
       }
 
       $filename = "{$itemtype}_{$filename}";
-      $path = GLPI_PLUGIN_DOC_DIR . "/genericobject/impact_icons/$filename";
+      $path = GENERICOBJECT_PICTURE_DIR . "/$filename";
 
       if ($relative) {
           $path = str_replace(GLPI_ROOT, "", $path);
@@ -2655,7 +2657,10 @@ class PluginGenericobjectType extends CommonDBTM {
           return null;
       }
 
-      return Plugin::getWebDir('genericobject', $full) . "/front/getimpacticon.php?itemtype=" . $this->fields['itemtype'];
+      $path = $CFG_GLPI['root_doc'] . '/front/document.send.php?file='
+          . str_replace(GLPI_ROOT . '/files/', "", GENERICOBJECT_PICTURE_DIR . '/')
+          . $this->fields['itemtype'] . '_' . $this->fields['impact_icon'];
+      return $path;
   }
 }
 
