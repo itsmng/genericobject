@@ -235,10 +235,14 @@ function plugin_init_genericobject()
              $type = $reflection->getProperty('objecttype');
              $type->setAccessible(true);
              $icon = $type->getValue($object)->fields['impact_icon'];
-             $icon_path = $CFG_GLPI['root_doc'] . 'front/document.send.php?file='
-                 . str_replace(GLPI_ROOT . '/files/', "", GENERICOBJECT_PICTURE_DIR . '/')
-                 . $classname . '_' . $icon;
-             $CFG_GLPI['impact_asset_types'][$classname::getType()] = $icon_path;
+             if ($icon) {
+                 $icon_path = $CFG_GLPI['root_doc'] . 'front/document.send.php?file='
+                     . str_replace(GLPI_ROOT . '/files/', "", GENERICOBJECT_PICTURE_DIR . '/')
+                     . $classname . '_' . $icon;
+                 $CFG_GLPI['impact_asset_types'][$classname::getType()] = $icon_path;
+             } else {
+                 $CFG_GLPI['impact_asset_types'][$classname::getType()] = GLPI_ROOT . '/pics/impact/default.png';
+             }
          }
          if (!in_array($classname, $CFG_GLPI['appliance_types'])) {
              $CFG_GLPI['appliance_types'][] = $classname;
