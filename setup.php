@@ -228,7 +228,7 @@ function plugin_init_genericobject()
          $name = $type['name']; 
          $classname = 'PluginGenericobject' . str_replace(' ', '', ucwords(str_replace('_', ' ', $name)));
                
-         if (!in_array($classname, $CFG_GLPI['impact_asset_types'])) {
+         if (!in_array($classname, $CFG_GLPI['impact_asset_types']) && class_exists($classname)) {
              $object = new $classname();
              $object->getEmpty();
              $reflection = new ReflectionClass($object);
