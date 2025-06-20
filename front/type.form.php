@@ -75,6 +75,6 @@ if (isset ($_GET["action"])) {
 
 Html::header(__("Objects management", "genericobject"), $_SERVER['PHP_SELF'], "config",
     "PluginGenericobjectType");
-$type->display();
+$type->display($_REQUEST);
 
 Html::footer();

@@ -254,10 +254,7 @@ function plugin_init_genericobject()
              $CFG_GLPI['domain_types'][] = $classname;
          }
 
-         
-         if (class_exists($classname)) {
-             Plugin::registerClass($classname);
-         }
+         Plugin::registerClass($classname);
       }
    }
 }
