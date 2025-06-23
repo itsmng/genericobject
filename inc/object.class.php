@@ -909,7 +909,11 @@ class PluginGenericobjectObject extends CommonDBTM {
 
          if ($tmp != '') {
             $itemtype   = getItemTypeForTable($tmp);
-            $tmpobj     = new $itemtype();
+            if (class_exists($itemtype)) {
+               $tmpobj     = new $itemtype();
+            } else {
+               $tmpobj = new PluginGenericobjectType();
+            }
 
             //Set table
             $option['table'] = $tmp;
