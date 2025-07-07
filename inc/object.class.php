@@ -585,7 +585,6 @@ class PluginGenericobjectObject extends CommonDBTM
         }
 
         $this->fields['id'] = $id;
-        $this->initForm($id, $options);
 
         $itemtype = $this->objecttype->fields['itemtype'];
         if ($previsualisation) {
@@ -615,10 +614,33 @@ class PluginGenericobjectObject extends CommonDBTM
             }
         }
 
+        $buttons = [];
+
+        if (($id <= 0) || ($options["withtemplate"] == 2)) {
+            $buttons = [
+                [
+                    "type" => "submit",
+                    "name" => "add",
+                    "value" => "<i class='fas fa-plus' aria-hidden='true'></i>&nbsp;" . _x("button", "Add"),
+                    "class" => "btn btn-secondary"
+                ],
+            ];
+        } else {
+            $buttons = [
+                [
+                    "type" => "submit",
+                    "name" => "update",
+                    "value" => "<i class='fas fa-save' aria-hidden='true'></i>&nbsp;" . _x("button", "Save"),
+                    "class" => "btn btn-secondary"
+                ],
+            ];
+        }
+
         $form = [
-            "action"   => $this->getFormURL(),
+            "action" => $this->getFormURL(),
+            "buttons" => $buttons,
             "itemtype" => $this->objecttype->fields["itemtype"],
-            "content"  => [
+            "content" => [
                 $itemtype::getTypeName() => [
                     "visible" => true,
                     "inputs" => $form_items
@@ -630,20 +652,20 @@ class PluginGenericobjectObject extends CommonDBTM
         if ($previsualisation) {
             $form["buttons"] = [null];
         }
-    
+
         $additionalHtml = "";
         if ($display_date && !$this->isNewID($id)) {
             $additionalHtml .= "<div class='row'>";
             $additionalHtml .= "<div class='col-12 text-center'>" . $date;
             if (!$template && !empty($this->fields['template_name'])) {
-            $additionalHtml .= "<span class='ms-2'>(" . __("Template name") . "&nbsp;: " .
-                $this->fields['template_name'] . ")</span>";
+                $additionalHtml .= "<span class='ms-2'>(" . __("Template name") . "&nbsp;: " .
+                    $this->fields['template_name'] . ")</span>";
             }
             $additionalHtml .= "</div>";
             $additionalHtml .= "</div>";
         }
-        
-        renderTwigForm($form, $additionalHtml);
+
+        renderTwigForm($form, $additionalHtml, $this->fields);
     }
 
 
@@ -704,19 +726,19 @@ class PluginGenericobjectObject extends CommonDBTM
                             $parameters['entity'] = $this->fields["entities_id"];
                             $parameters['right'] = 'all';
                             $form_field = [
-                                "name"       => $name,
-                                "type"       => "select",
-                                "value"      => $value,
-                                "values"     => getOptionForItems($itemtype, ['entities_id' => $this->fields['entities_id']]),
-                                "actions"    => getItemActionButtons(["info"], $itemtype)
+                                "name" => $name,
+                                "type" => "select",
+                                "value" => $value,
+                                "values" => getOptionForItems($itemtype, ['entities_id' => $this->fields['entities_id']]),
+                                "actions" => getItemActionButtons(["info"], $itemtype)
                             ];
                         } else {
                             $form_field = [
-                                "name"       => $name,
-                                "type"       => "select",
-                                "value"      => $value,
-                                "values"     => getOptionForItems($itemtype, ['entities_id' => $this->fields['entities_id']]),
-                                "actions"    => getItemActionButtons(["info", "add"], $itemtype)
+                                "name" => $name,
+                                "type" => "select",
+                                "value" => $value,
+                                "values" => getOptionForItems($itemtype, ['entities_id' => $this->fields['entities_id']]),
+                                "actions" => getItemActionButtons(["info", "add"], $itemtype)
                             ];
                         }
                     } else {
@@ -737,20 +759,20 @@ class PluginGenericobjectObject extends CommonDBTM
                             $step = 1;
                         }
                         $form_field = [
-                            "name"  => $name,
-                            "type"  => "number",
+                            "name" => $name,
+                            "type" => "number",
                             "value" => $value,
-                            "step"  => $step,
-                            "min"   => $min,
-                            "max"   => $max,
+                            "step" => $step,
+                            "min" => $min,
+                            "max" => $max,
                         ];
                     }
                     break;
 
                 case "tinyint":
                     $form_field = [
-                        "name"  => "name",
-                        "type"  => "checkbox",
+                        "name" => "name",
+                        "type" => "checkbox",
                         "value" => $value
                     ];
                     break;
@@ -769,14 +791,14 @@ class PluginGenericobjectObject extends CommonDBTM
                     }
                     $parameters = [
                         "itemtype" => $this->getType(),
-                        "field"    => $name,
+                        "field" => $name,
                     ];
                     $source = $CFG_GLPI['root_doc'] . "/ajax/autocompletion.php?" . Toolbox::append_params($parameters, '&');
                     $form_field = [
-                        "name"  => $name,
-                        "type"  => "text",
+                        "name" => $name,
+                        "type" => "text",
                         "value" => $objectName,
-                        "id"    => "text" . $name,
+                        "id" => "text" . $name,
                         /* Someday, someone will get the autocomplete for this working, but that's not me nor is it today!
                         "init"  => <<<JS
                                 $("#text{$name}").autocomplete({source: "{$source}", minLength: 3});
@@ -788,8 +810,8 @@ class PluginGenericobjectObject extends CommonDBTM
                 case "longtext":
                 case "text":
                     $form_field = [
-                        "name"  => $name,
-                        "type"  => "textarea",
+                        "name" => $name,
+                        "type" => "textarea",
                         "value" => $value
                     ];
                     break;
@@ -799,8 +821,8 @@ class PluginGenericobjectObject extends CommonDBTM
 
                 case "date":
                     $form_field = [
-                        "name"  => $name,
-                        "type"  => "date",
+                        "name" => $name,
+                        "type" => "date",
                         "value" => $value
                     ];
                     break;
@@ -808,8 +830,8 @@ class PluginGenericobjectObject extends CommonDBTM
                 case "datetime":
                 case "timestamp":
                     $form_field = [
-                        "name"  => $name,
-                        "type"  => "datetime-local",
+                        "name" => $name,
+                        "type" => "datetime-local",
                         "value" => $value
                     ];
                     break;
@@ -817,17 +839,17 @@ class PluginGenericobjectObject extends CommonDBTM
                 case "float":
                 case 'decimal':
                     $form_field = [
-                        "name"  => $name,
-                        "type"  => "number",
+                        "name" => $name,
+                        "type" => "number",
                         "value" => $value,
-                        "step"  => "any",
+                        "step" => "any",
                     ];
                     break;
 
                 default:
                     $form_field = [
-                        "name"  => $name,
-                        "type"  => "text",
+                        "name" => $name,
+                        "type" => "text",
                         "value" => $value,
                     ];
                     break;
