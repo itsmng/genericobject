@@ -793,17 +793,20 @@ class PluginGenericobjectObject extends CommonDBTM
                         "itemtype" => $this->getType(),
                         "field" => $name,
                     ];
+
+                    // As seen in object.form.php, this is necessary.
+                    if ($name == "name") {
+                        $name = "name_";
+                    }
                     $source = $CFG_GLPI['root_doc'] . "/ajax/autocompletion.php?" . Toolbox::append_params($parameters, '&');
                     $form_field = [
                         "name" => $name,
                         "type" => "text",
                         "value" => $objectName,
                         "id" => "text" . $name,
-                        /* Someday, someone will get the autocomplete for this working, but that's not me nor is it today!
                         "init"  => <<<JS
-                                $("#text{$name}").autocomplete({source: "{$source}", minLength: 3});
+                                $(function () { $("#text{$name}").autocomplete({source: "{$source}", minLength: 3}); });
                                 JS
-                        */
                     ];
                     break;
 
