@@ -722,6 +722,10 @@ class PluginGenericobjectObject extends CommonDBTM
                         if (isset($searchoption['condition'])) {
                             $parameters['condition'] = $searchoption['condition'];
                         }
+                        $conditions = [];
+                        if (isset($parameters["entity"])) {
+                            $conditions = ["entities_id" => $parameters["entity"]];
+                        }
                         if ($dropdown instanceof User) {
                             $parameters['entity'] = $this->fields["entities_id"];
                             $parameters['right'] = 'all';
@@ -729,15 +733,16 @@ class PluginGenericobjectObject extends CommonDBTM
                                 "name" => $name,
                                 "type" => "select",
                                 "value" => $value,
-                                "values" => getOptionForItems($itemtype, ['entities_id' => $this->fields['entities_id']]),
+                                "values" => getOptionForItems($itemtype, $conditions),
                                 "actions" => getItemActionButtons(["info"], $itemtype)
                             ];
                         } else {
+                            
                             $form_field = [
                                 "name" => $name,
                                 "type" => "select",
                                 "value" => $value,
-                                "values" => getOptionForItems($itemtype, ['entities_id' => $this->fields['entities_id']]),
+                                "values" => getOptionForItems($itemtype, $conditions),
                                 "actions" => getItemActionButtons(["info", "add"], $itemtype)
                             ];
                         }
