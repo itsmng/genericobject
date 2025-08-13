@@ -51,9 +51,9 @@ msgstr "Champ(s) supprimé(s) avec succès"
 msgid "Field added successfully"
 msgstr "Champ ajouté avec succès"
 
-#: inc/typefamily.class.php:36 inc/type.class.php:380 inc/type.class.php:517
+#: inc/type.class.php:550
 msgid "Family of type of objects"
-msgstr "Famille"
+msgstr "Famille de type d'objets"
 
 #: inc/profile.class.php:141
 msgid "General"

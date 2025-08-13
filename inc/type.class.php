@@ -549,7 +549,7 @@ class PluginGenericobjectType extends CommonDBTM {
                     ],
                     __('Family of type of objects') => [
                         'type'  => 'select',
-                        'name'  => 'family_type',
+                        'name'  => 'plugin_genericobject_typefamilies_id',
                         'itemtype' => 'PluginGenericobjectTypeFamily',
                         'value' => $this->fields["plugin_genericobject_typefamilies_id"],
                         'actions' => getItemActionButtons(['info', 'add'], PluginGenericobjectTypeFamily::class),
