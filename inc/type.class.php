@@ -180,14 +180,8 @@ class PluginGenericobjectType extends CommonDBTM {
       }
       $input['name']     = self::filterInput($input['name']);
 
-      //Name must not be present in DB
-      if (countElementsInTable(getTableForItemType(__CLASS__), ['name' => $input['name']])) {
-         Session::addMessageAfterRedirect(__("A type already exists with the same name", "genericobject"), ERROR, true);
-         return [];
-      } else {
          $input['itemtype'] = self::getClassByName($input['name']);
          return $input;
-      }
    }
 
    function post_addItem() {
@@ -522,15 +516,11 @@ class PluginGenericobjectType extends CommonDBTM {
                         'name'  => 'id',
                         'value' => $this->fields["id"],
                     ] : [],
-                    __('Internal identifier', 'genericobject') => $this->isNewID($ID) ? [
+                    __('Internal identifier', 'genericobject') => [
                         'type'  => 'text',
                         'name'  => 'name',
                         'value' => $this->fields["name"],
-                    ] : [
-                        'content' => <<<HTML
-                            <input type='hidden' name='name' value='{$this->fields["name"]}'>
-                            {$this->fields["name"]}
-                        HTML,
+                        'required' => true,
                     ],
                     __('Label') => $this->isNewID($ID) ? [] : [
                         'content' => $this->fields["itemtype"]::getTypeName(),
