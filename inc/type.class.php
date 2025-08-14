@@ -180,8 +180,43 @@ class PluginGenericobjectType extends CommonDBTM {
       }
       $input['name']     = self::filterInput($input['name']);
 
+      //Name must not be present in DB
+      if (countElementsInTable(getTableForItemType(__CLASS__), ['name' => $input['name']])) {
+         Session::addMessageAfterRedirect(__("A type already exists with the same name", "genericobject"), ERROR, true);
+         return [];
+      } else {
          $input['itemtype'] = self::getClassByName($input['name']);
          return $input;
+      }
+   }
+
+   /**
+     * Compute the name of a copied item
+     * The goal is to set the copy name as "{name}copy{i}" unless it's
+     * the first copy: in this case just "{name}copy" is acceptable
+     * Override to create class name friendly names
+     *
+     * @param string $current_item The item being copied
+     * @param int    $copy_index   The index to append to the copy's name
+     *
+     * @return string The computed name of the new item to be created
+     */
+   public function computeCloneName(string $current_name, int $copy_index): string {
+      if ($copy_index === 1) {
+         $pattern = __("%s (copy)");
+         $token   = str_replace('%s', '', $pattern);
+         $token   = preg_replace('/[\s()]+/', '', $token);
+         $token   = self::filterInput($token);
+         if ($token === '' || $token === null) { $token = 'copy'; }
+         return $current_name . $token;
+      }
+
+      $pattern = __("%s (copy %d)");
+      $token   = str_replace(['%s','%d'], '', $pattern);
+      $token   = preg_replace('/[\s()]+/', '', $token);
+      $token   = self::filterInput($token);
+      if ($token === '' || $token === null) { $token = 'copy'; }
+      return $current_name . $token . $copy_index;
    }
 
    function post_addItem() {
@@ -516,11 +551,16 @@ class PluginGenericobjectType extends CommonDBTM {
                         'name'  => 'id',
                         'value' => $this->fields["id"],
                     ] : [],
-                    __('Internal identifier', 'genericobject') => [
+                    __('Internal identifier', 'genericobject') => $this->isNewID($ID) ? [
                         'type'  => 'text',
                         'name'  => 'name',
                         'value' => $this->fields["name"],
                         'required' => true,
+                    ] : [
+                        'content' => <<<HTML
+                            <input type='hidden' name='name' value='{$this->fields["name"]}'>
+                            {$this->fields["name"]}
+                        HTML,
                     ],
                     __('Label') => $this->isNewID($ID) ? [] : [
                         'content' => $this->fields["itemtype"]::getTypeName(),
