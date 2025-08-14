@@ -213,7 +213,34 @@ class PluginGenericobjectType extends CommonDBTM {
       return $input;
    }
 
+   /**
+     * Compute the name of a copied item
+     * The goal is to set the copy name as "{name}copy{i}" unless it's
+     * the first copy: in this case just "{name}copy" is acceptable
+     * Override to create class name friendly names
+     *
+     * @param string $current_item The item being copied
+     * @param int    $copy_index   The index to append to the copy's name
+     *
+     * @return string The computed name of the new item to be created
+     */
+   public function computeCloneName(string $current_name, int $copy_index): string {
+      if ($copy_index === 1) {
+         $pattern = __("%s (copy)");
+         $token   = str_replace('%s', '', $pattern);
+         $token   = preg_replace('/[\s()]+/', '', $token);
+         $token   = self::filterInput($token);
+         if ($token === '' || $token === null) { $token = 'copy'; }
+         return $current_name . $token;
+      }
 
+      $pattern = __("%s (copy %d)");
+      $token   = str_replace(['%s','%d'], '', $pattern);
+      $token   = preg_replace('/[\s()]+/', '', $token);
+      $token   = self::filterInput($token);
+      if ($token === '' || $token === null) { $token = 'copy'; }
+      return $current_name . $token . $copy_index;
+   }
 
    public function handleImpactIconUpdate($input)
    {
